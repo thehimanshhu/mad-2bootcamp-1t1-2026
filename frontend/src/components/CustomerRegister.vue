@@ -65,7 +65,8 @@ export default {
                                         )
                 console.log("hello")
                 const data = await response.json() 
-                console.log(data.message)
+                console.log(data)
+                this.$router.push("/login")
             }
             catch(e){
                 console.log("m not able to connect")
