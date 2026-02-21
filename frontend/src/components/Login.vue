@@ -53,6 +53,9 @@ export default{
                     else if (data.role === "professional"){
                         this.$router.push("/professional/dashboard")
                     }   
+                    else if (data.role === "customer"){
+                        this.$router.push("/customer/dashboard")
+                    }   
                     
                 }
                 else {

@@ -8,7 +8,9 @@ import ProfessionalRegisterComp from './components/ProfessionalRegister.vue'
 import AdminComp from './components/AdminComp.vue'
 import AdminDashboard from './components/AdminDashboard.vue'
 import AdminSearch from './components/AdminSearch.vue'
-
+import ProfessionalComp from './components/ProfessionalComp.vue'
+import ProfessionalDashboard from './components/ProfessionalDashboard.vue'
+import CreatePackage from './components/CreatePackage.vue'
 
 const routes = [
     {
@@ -40,6 +42,20 @@ const routes = [
                 component : AdminSearch
             }
 
+        ]
+    },
+    {
+        path :"/professional" , 
+        component : ProfessionalComp,
+        children : [
+            {
+                path : "dashboard",
+                component : ProfessionalDashboard
+            }, 
+            {
+                path : "create-package",
+                component : CreatePackage
+            }
         ]
     }
 ]

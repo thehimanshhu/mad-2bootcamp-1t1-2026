@@ -22,7 +22,7 @@
                                  <i class="bi bi-person-circle fs-4 ms-2"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><router-link class="dropdown-item" to="/logout">Logout</router-link></li>
+                                <li><button class="dropdown-item" @click="logout">Logout</button></li>
                                
                             </ul>
                         </div>
@@ -37,12 +37,18 @@
 
 <script>
 export default ({
-    name: 'UsersCard',
+    name: 'NavbarComp',
     data() {
         return {
             // Define any data properties if needed
         }
     },
+    methods: {
+        logout() {
+            localStorage.removeItem('token');
+            this.$router.push('/login');
+        }
+    }
 
 })
 </script>
