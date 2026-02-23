@@ -8,16 +8,16 @@
         </div>
         <div class="card-body">
             <div class="row ">
-                <div class="col-3">
+                <div v-for="pack in packages" :key="pack.id" class="col-3">
                     <div class="card ">
 
                         <div class="card-body">
-                            <h5 class="card-title">Basic Package</h5>
-                            <p class="card-text">Some quick example text to build on the card title and make up the bulk
-                                of
-                                the
-                                card’s content.</p>
-                            <a href="#" class="btn btn-primary">Go somewhere</a>
+                            <h5 class="card-title">Title: {{ pack.title }}</h5>
+                            <p class="card-text">{{ pack.description }}</p>
+                            <p class="card-text">Price: {{ pack.price }}</p>
+                            <p class="card-text">Start Date: {{ pack.start_date }}</p>
+                            <p class="card-text">End Date: {{ pack.end_date }}</p>
+                            <p class="card-text">Status: {{ pack.status }}</p>
                         </div>
                     </div>
                 </div>
@@ -33,74 +33,35 @@ export default {
     name: 'ProfessionalDashboard',
     data() {
         return {
-            professionals: null,
-            customers: null
+            packages : null
         }
     },
     methods: {
-        async fetchProfessionals() {
+        
+        async getpackages(){
             try {
-                const response = await fetch('http://localhost:5000/api/professionals',
-                    {
-                        "method": "GET",
-                        "headers": {
-                            "Authentication-Token": localStorage.getItem("token")
-                        }
+                const response = await fetch('http://localhost:5000/api/get-packages', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json' , 
+                        "Authentication-Token": localStorage.getItem("token")
                     }
-                );
-                const data = await response.json();
+                });
                 if (response.ok) {
-
-                    this.professionals = data;
-                    console.log(this.professionals);
-                } else if (response.status === 401) {
-                    this.$router.push('/login');
-                } else if (response.status === 403) {
-                    this.$router.push('/admin/dashboard');
+                    const data = await response.json();
+                    this.packages = data;
+                    console.log(this.packages);
                 } else {
-                    this.$router.go(0)
+                    console.error('Failed to fetch packages');
+                    this.$router.push("/login")
                 }
-
-
-            }
-            catch (err) {
-                console.log(err);
-            }
-        },
-        async fetchCustomers() {
-            try {
-                const response = await fetch('http://localhost:5000/api/customers',
-                    {
-                        "method": "GET",
-                        "headers": {
-                            "Authentication-Token": localStorage.getItem("token")
-                        }
-                    }
-                );
-                const data = await response.json();
-
-                if (response.ok) {
-
-                    this.customers = data;
-                } else if (response.status === 401) {
-                    this.$router.push('/login');
-                } else if (response.status === 403) {
-                    this.$router.push('/admin/dashboard');
-                } else {
-                    this.$router.go(0)
-                }
-
-
-            }
-            catch (err) {
-                console.log(err);
+            } catch (error) {
+                console.error('Error:', error);
             }
         }
     },
     mounted() {
-        this.fetchProfessionals();
-
-        this.fetchCustomers();
+      this.getpackages(); 
     }
 
 }

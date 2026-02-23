@@ -6,7 +6,7 @@
         <div class="card">
             <div class="card-body">
                 <div v-if="message" class="alert alert-danger">{{ message }}</div>
-                <form action="">
+
                     <div class="form-floating mb-3">
                         <input type="text" class="form-control" v-model="formdata.title" id="floatingTitle" required placeholder="name@example.com">
                         <label for="floatingTitle">Package Title</label>
@@ -29,8 +29,6 @@
                         <label for="floatingEndDate">End Date</label>
                     </div>
                     <button class="btn btn-primary w-100 " @click="createPackage">Create Package</button>
-
-                </form>
             </div>
         </div>
     </div>

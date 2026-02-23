@@ -18,6 +18,10 @@ class User(db.Model , UserMixin):
     roles=db.relationship("Role" , secondary="user_roles" , backref="users")
     customer_profile = db.relationship("CustomerProfile" , backref="user" , uselist=False)
     professional_profile = db.relationship("ProfessionalProfile" , backref="user" , uselist=False)
+    packages = db.relationship("Package" , backref="professional" , lazy=True)
+    created_bookings = db.relationship("Booking" , backref= "customer", foreign_keys="Booking.cust_id")
+    recieved_bookings = db.relationship("Booking" ,  backref = "professional" , foreign_keys="Booking.prof_id")
+
 
 class UserRoles(db.Model):
     __tablename__="user_roles"
@@ -39,7 +43,7 @@ class Package(db.Model):
 
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key =True , autoincrement=True)
-    title = db.Column(db.String, unique=True , nullable=False)
+    
     total_price = db.Column(db.String , nullable=False)
     start_time = db.Column(db.Time , nullable =False)
     end_time = db.Column(db.Time , nullable =False) 

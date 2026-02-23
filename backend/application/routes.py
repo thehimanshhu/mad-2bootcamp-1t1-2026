@@ -4,6 +4,7 @@ from flask_security import  auth_required , roles_required , current_user, SQLAl
 from flask_security.utils import verify_and_update_password 
 from .models import db , User , Role , Package , Booking , CustomerProfile , ProfessionalProfile
 from datetime import datetime
+from sqlalchemy import and_ , or_
 @app.route("/")
 def home():
     return "Welcome to my application!"
@@ -266,3 +267,129 @@ def create_package():
     print("Package created successfully")
     return {"message": "Package created successfully"}, 201
 
+
+
+@app.route("/api/get-packages" , methods=["GET"])
+@auth_required("token")
+def get_packages():
+    if current_user.roles[0].name == "professional":
+        packages = db.session.query(Package).filter_by(prof_id=current_user.id).all()
+        packs = []
+        for package in packages:
+            packs.append({
+                "id": package.id,
+                "title": package.title,
+                "description": package.description,
+                "price": package.price,
+                "start_date": package.start_date.strftime("%Y-%m-%d"),
+                "end_date": package.end_date.strftime("%Y-%m-%d"),
+                "status": package.status
+            })
+        print(packs)
+        return packs, 200
+    elif current_user.roles[0].name == "customer":
+        packages = db.session.query(Package).filter(and_(Package.status=="Active" , Package.start_date <=datetime.now().date() , Package.end_date >=datetime.now().date() )).all()
+        packs = []
+        for package in packages:
+            packs.append({
+                "id": package.id,
+                "title": package.title,
+                "description": package.description,
+                "price": package.price,
+                "start_date": package.start_date.strftime("%Y-%m-%d"),
+                "end_date": package.end_date.strftime("%Y-%m-%d"),
+                "status": package.status , 
+                "professional_name": package.professional.name,
+                "professional_email": package.professional.email,
+                "professional_mobile": package.professional.professional_profile.mobile,
+            })
+        return packs, 200
+
+
+
+@app.route("/api/getpackage/<int:pack_id>" , methods=["GET"])
+def get_package(pack_id):
+    package = db.session.query(Package).filter(and_(Package.id==pack_id , Package.status=="Active" ,Package.start_date <=datetime.now().date() , Package.end_date >=datetime.now().date() )).first()
+    if package:
+        return {
+            "id": package.id,
+            "title": package.title,
+            "description": package.description,
+                "price": package.price,
+                "start_date": package.start_date.strftime("%Y-%m-%d"),
+                "end_date": package.end_date.strftime("%Y-%m-%d"),
+                "status": package.status , 
+                "professional_name": package.professional.name,
+                        "professional_email": package.professional.email,
+                        "professional_mobile": package.professional.professional_profile.mobile,
+            } , 200
+    else:
+        return {"message": "Package not found or inactive"}, 404
+
+
+@app.route("/api/book-package/<int:pack_id>" , methods=["POST"])
+@auth_required("token")
+@roles_required("customer")
+def book_package(pack_id):
+    package= db.session.query(Package).filter_by(id=pack_id).first()
+    if package:
+        if package.status != "Active" and not (package.start_date <=datetime.now().date() and package.end_date >=datetime.now().date()):
+            return {"message": "Package is not active"}, 400
+        start_date = request.json.get("start_date")
+        start_time = request.json.get("start_time")
+        total_price = package.price
+        booking = Booking( total_price=total_price , start_time=datetime.strptime(start_time , "%H:%M").time() , end_time=datetime.strptime(start_time , "%H:%M").time() , date=datetime.strptime(start_date , "%Y-%m-%d").date() , status="Requested" , prof_id=package.prof_id , pack_id=pack_id , cust_id=current_user.id)
+        db.session.add(booking)
+        db.session.commit()
+        return {"message": "Package booked successfully"}, 201
+
+@app.route("/api/getbookings") 
+@auth_required("token")
+def getbookings():
+    if current_user.roles[0].name =="customer":
+        requested_bookings = db.session.query(Booking).filter(and_(Booking.cust_id == current_user.id , Booking.status=="Requested")).all()
+        requested_bookings_list = []
+        for booking in requested_bookings:
+            requested_bookings_list.append({
+                "booking_id": booking.id,
+                "package_title": booking.package.title,
+                "start_time": booking.start_time.strftime("%H:%M"),
+                "end_time": booking.end_time.strftime("%H:%M"),
+                "date": booking.date.strftime("%Y-%m-%d"),
+                "status": booking.status ,
+                "professional_email": booking.professional.email,
+                "professional_mobile": booking.professional.professional_profile.mobile,
+                "professional_name" : booking.professional.name
+            })
+
+        accepted_bookings = db.session.query(Booking).filter(and_(Booking.cust_id == current_user.id , Booking.status=="Accepted")).all()
+        accepted_bookings_list = []
+        for booking in accepted_bookings:
+            accepted_bookings_list.append({
+                "booking_id": booking.id,
+                "package_title": booking.package.title,
+                "start_time": booking.start_time.strftime("%H:%M"),
+                "end_time": booking.end_time.strftime("%H:%M"),
+                "date": booking.date.strftime("%Y-%m-%d"),
+                "status": booking.status ,
+                "professional_email": booking.professional.email,
+                "professional_mobile": booking.professional.professional_profile.mobile,
+                "professional_name" : booking.professional.name
+            })
+        rejected_bookings = db.session.query(Booking).filter(and_(Booking.cust_id == current_user.id ,or_( Booking.status=="Rejected" , Booking.status=="Completed"))).all() 
+        rejected_bookings_list = []
+        for booking in rejected_bookings:
+            rejected_bookings_list.append({
+                "booking_id": booking.id,
+                "package_title": booking.package.title,
+                "start_time": booking.start_time.strftime("%H:%M"),
+                "end_time": booking.end_time.strftime("%H:%M"),
+                "date": booking.date.strftime("%Y-%m-%d"),
+                "status": booking.status ,
+                "professional_email": booking.professional.email,
+                "professional_mobile": booking.professional.professional_profile.mobile,
+                "professional_name" : booking.professional.name
+            })
+        bookings = {"Accepted" : accepted_bookings_list , "Requested" : requested_bookings_list , "Rejected/Completed" : rejected_bookings_list}
+        print("Requested")
+        return bookings, 200
