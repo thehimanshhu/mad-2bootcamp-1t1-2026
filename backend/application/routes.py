@@ -393,3 +393,124 @@ def getbookings():
         bookings = {"Accepted" : accepted_bookings_list , "Requested" : requested_bookings_list , "Rejected/Completed" : rejected_bookings_list}
         print("Requested")
         return bookings, 200
+
+    if current_user.roles[0].name =="professional":
+        requested_bookings = db.session.query(Booking).filter(and_(Booking.prof_id == current_user.id , Booking.status=="Requested")).all()
+        requested_bookings_list = []
+        for booking in requested_bookings:
+            requested_bookings_list.append({
+                "booking_id": booking.id,
+                "package_title": booking.package.title,
+                "start_time": booking.start_time.strftime("%H:%M"),
+                "end_time": booking.end_time.strftime("%H:%M"),
+                "date": booking.date.strftime("%Y-%m-%d"),
+                "status": booking.status ,
+                "customer_email": booking.customer.email,
+                "customer_mobile": booking.customer.customer_profile.mobile,
+                "customer_name" : booking.customer.name
+            })
+
+        accepted_bookings = db.session.query(Booking).filter(and_(Booking.prof_id == current_user.id , Booking.status=="Accepted")).all()
+        accepted_bookings_list = []
+        for booking in accepted_bookings:
+            accepted_bookings_list.append({
+                "booking_id": booking.id,
+                "package_title": booking.package.title,
+                "start_time": booking.start_time.strftime("%H:%M"),
+                "end_time": booking.end_time.strftime("%H:%M"),
+                "date": booking.date.strftime("%Y-%m-%d"),
+                "status": booking.status ,
+                "customer_email": booking.customer.email,
+                "customer_mobile": booking.customer.customer_profile.mobile,
+                "customer_name" : booking.customer.name
+            })
+        rejected_bookings = db.session.query(Booking).filter(and_(Booking.prof_id == current_user.id ,or_( Booking.status=="Rejected" , Booking.status=="Completed"))).all() 
+        rejected_bookings_list = []
+        for booking in rejected_bookings:
+            rejected_bookings_list.append({
+                "booking_id": booking.id,
+                "package_title": booking.package.title,
+                "start_time": booking.start_time.strftime("%H:%M"),
+                "end_time": booking.end_time.strftime("%H:%M"),
+                "date": booking.date.strftime("%Y-%m-%d"),
+                "status": booking.status ,
+                "customer_email": booking.customer.email,
+                "customer_mobile": booking.customer.customer_profile.mobile,
+                "customer_name" : booking.customer.name
+            })
+        bookings = {"Accepted" : accepted_bookings_list , "Requested" : requested_bookings_list , "Rejected/Completed" : rejected_bookings_list}
+        print("Requested")
+        return bookings, 200
+
+@app.route("/api/accept-booking/<int:booking_id>" , methods=["GET"])
+@auth_required("token")
+@roles_required("professional")
+def accept_booking(booking_id):
+    booking = db.session.query(Booking).filter_by(id=booking_id , prof_id=current_user.id).first()
+    if booking:
+        if booking.status == "Requested":
+            booking.status = "Accepted"
+            db.session.commit()
+            return {"message": "Booking accepted successfully"}, 200
+        else:
+            return {"message": "Booking is not in Requested status"}, 400
+    else:
+        return {"message": "Booking not found"}, 404
+    
+@app.route("/api/reject-booking/<int:booking_id>" , methods=["GET"])
+@auth_required("token")
+@roles_required("professional")
+def reject_booking(booking_id):
+    booking = db.session.query(Booking).filter_by(id=booking_id , prof_id=current_user.id).first()
+    if booking:
+        if booking.status == "Requested":
+            booking.status = "Rejected"
+            db.session.commit()
+            return {"message": "Booking rejected successfully"}, 200
+        else:
+            return {"message": "Booking is not in Requested status"}, 400
+    else:
+        return {"message": "Booking not found"}, 404
+
+
+@app.route("/api/admin-search" , methods=["GET"])
+@auth_required("token")
+def admin_search():
+    query_type = request.args.get("query_type")
+    query=request.args.get("query")
+
+    if query_type == "customer":
+
+        custs = db.session.query(CustomerProfile).filter(or_(CustomerProfile.name.contains(query) ,CustomerProfile.email.contains(query  ))).all()
+        custs_list= []
+        for customer in custs: 
+            custs_list.append(
+                {
+                "customer_id": customer.id,
+                "Customer Name": customer.name,
+                "Customer Email": customer.email,
+                "Address": customer.address,
+                "Mobile": customer.mobile,
+                "Status" : customer.status
+            }
+            )
+        return custs_list , 200
+    
+    elif query_type == "professional":
+
+        profs = db.session.query(ProfessionalProfile).filter(or_(ProfessionalProfile.name.contains(query) ,ProfessionalProfile.email.contains(query  ))).all()
+        profs_list= []
+        for prof in profs: 
+            profs_list.append(
+                {
+                "professional_id": prof.id,
+                "Professional Name": prof.name,
+                "Professional Email": prof.email,
+                "Address": prof.address,
+                "Mobile": prof.mobile,
+                "Status" : prof.status
+            }
+            )
+        return profs_list , 200
+    else:
+        return {"message": "Invalid query type"}, 400

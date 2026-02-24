@@ -55,7 +55,31 @@
             <div class="tab-content" id="pills-tabContent">
                 <div class="tab-pane fade show active" id="pills-accepted" role="tabpanel"
                     aria-labelledby="pills-accepted-tab" tabindex="0">
+                    <table v-if="bookings && bookings.Accepted && bookings.Accepted.length > 0" class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Package Name</th>
+                                <th scope="col">Professional Name</th>
+                                <th scope="col">Professional Email</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Time</th>
+                                <th scope="col">Status</th>
 
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="booking in bookings.Accepted" :key="booking.booking_id">
+                                <th scope="row">{{ booking.package_title }}</th>
+                                <td>{{ booking.professional_name }}</td>
+                                <td>{{ booking.professional_email }}</td>
+                                <td>{{ booking.date }}</td>
+                                <td>{{ booking.start_time }}</td>
+                                <td>{{ booking.status }}</td>
+
+                            </tr>
+
+                        </tbody>
+                    </table>
 
                 </div>
                 <div class="tab-pane fade" id="pills-requested" role="tabpanel" aria-labelledby="pills-requested-tab"
@@ -88,6 +112,31 @@
                 </div>
                 <div class="tab-pane fade" id="pills-rejected" role="tabpanel" aria-labelledby="pills-rejected-tab"
                     tabindex="0">
+                    <table v-if="bookings && bookings.rejected && bookings.rejected.length > 0" class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Package Name</th>
+                                <th scope="col">Customer Name</th>
+                                <th scope="col">Customer Email</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Time</th>
+                                <th scope="col">Status</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="booking in bookings.rejected" :key="booking.booking_id">
+                                <th scope="row">{{ booking.package_title }}</th>
+                                <td>{{ booking.customer_name }}</td>
+                                <td>{{ booking.customer_email }}</td>
+                                <td>{{ booking.date }}</td>
+                                <td>{{ booking.start_time }}</td>
+                                <td>{{ booking.status }}</td>
+
+                            </tr>
+
+                        </tbody>
+                    </table>
 
 
                 </div>
@@ -145,6 +194,7 @@ export default {
                 const data = await response.json();
                 if (response.ok) {
                     this.bookings = data
+                    console.log(this.bookings)
                 }
 
             }

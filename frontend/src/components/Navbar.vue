@@ -12,7 +12,7 @@
                         <router-link class="nav-link" :class="{ 'active' : $route.path=='/admin/dashboard'}" aria-current="page" href="#">Dashboard</router-link>
                     </li>
                     <li class="nav-item">
-                        <router-link class="nav-link" :class="{ 'active' : $route.path=='/admin/search'}" href="#">Search</router-link>
+                        <router-link class="nav-link" :class="{ 'active' : $route.path=='/admin/search'}" href="">Search</router-link>
                     </li>
                     <li class="nav-item">
                        
