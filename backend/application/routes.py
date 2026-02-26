@@ -514,3 +514,37 @@ def admin_search():
         return profs_list , 200
     else:
         return {"message": "Invalid query type"}, 400
+
+
+from .task import add_together
+@app.route("/starttask")
+def task():
+    a = 5 
+    b = 6
+    result = add_together.delay(a,b)
+    return {"the_result" : result.id} 
+
+
+from celery.result import AsyncResult
+
+@app.get("/result/<id>")
+def task_result(id) :
+    result = AsyncResult(id)
+    return {
+        "ready": result.ready(),
+        "successful": result.successful(),
+        "value": result.result if result.ready() else None,
+    }
+
+from .task import customer_csv
+@app.route("/exportcustomercsv"  )
+@auth_required("token")
+def exportcustomercsv():
+    if current_user.roles[0].name =="customer":
+        result  = customer_csv.delay(current_user.id)
+        return {"result_id" : result.id}
+    else:
+        return "you are not authorised to execute the task"
+    
+
+
