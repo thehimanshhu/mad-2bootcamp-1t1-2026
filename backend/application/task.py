@@ -1,5 +1,7 @@
 from celery import shared_task
 from time import sleep
+from jinja2 import Template 
+from .mail import send_email
 @shared_task(name = "add_together" , ignore_result = False)
 def add_together(a, b ):
     sleep(10)
@@ -19,4 +21,19 @@ def customer_csv(cust_id):
 
         for index, booking in enumerate(bookings):
             writerobj.writerow([index + 1, booking.package.title , booking.professional.name , booking.professional.email , booking.date , booking.status])
-    return f"./static/{csv_filename}"
+    return csv_filename
+
+
+
+from .utility import render_email_template
+@shared_task(name="Admin_monthly_Report" , ignore_result = False)
+def admin_monthly_report():
+    bookings = db.session.query(Booking).all()
+    admin = db.session.query(Role).filter_by(name = "admin").first().users[0]   
+    username = "Admin"
+
+    email_content = render_email_template( username , bookings , "./templates/admin_montly_report.html")
+    send_email(admin.email , "Here is montly booking report!!" ,  email_content)
+    return "Email Sent!!"
+    
+

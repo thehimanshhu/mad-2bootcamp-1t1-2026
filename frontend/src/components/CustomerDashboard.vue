@@ -31,7 +31,22 @@
     </div>
     <div class="card mt-5 ms-5 me-5 mb-4">
         <div class="card-header">
-            <h3>My Bookings</h3>
+            <div class="d-flex">
+                <h3>My Bookings</h3>
+                <button v-if="!is_loading" class="btn btn-sm btn-primary ms-auto me-3" @click="exportcsv">
+                    Export Booking Data
+                </button>
+
+                <button v-else class="btn btn-sm btn-primary ms-auto me-3" @click="exportcsv">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </button>
+
+
+            </div>
+
+
         </div>
         <div class="card-body">
             <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
@@ -154,7 +169,9 @@ export default {
     data() {
         return {
             packages: {},
-            bookings: null
+            bookings: null,
+            task_id: null,
+            is_loading: false
         }
     },
     methods: {
@@ -200,6 +217,57 @@ export default {
             }
             catch (e) {
                 this.$router.push("/login")
+            }
+        },
+        async exportcsv() {
+            try {
+                this.is_loading = true
+                const response = await fetch("http://localhost:5000/exportcustomercsv",
+                
+                    {
+                        method: "GET",
+                        headers: {
+                            "Authentication-Token": localStorage.getItem("token"),
+                            "Content-Type": "application/json"
+                        }
+                    }
+                )
+                const data = await response.json();
+                if (response.ok) {
+
+
+                    this.task_id = data.task_id
+
+
+                    const pool_for_csv = setInterval(
+
+                        async () => {
+                            const res = await fetch(`http://localhost:5000/result?id=${this.task_id}`,
+                                {
+                                    method: "GET",
+                                    headers: {
+                                        "Authentication-Token": localStorage.getItem("token"),
+                                        "Content-Type": "application/json"
+                                    }
+                                }
+                            )
+                            if (res.status == 202) {
+                                console.log("CSV Genration is in progress")
+                            }
+                            else if (res.status == 200) {
+                                clearInterval(pool_for_csv)
+                                this.is_loading = false
+                                window.location.href = `http://localhost:5000/result?id=${this.task_id}`
+                            }
+                        }, 2000
+                    )
+
+
+                }
+
+            }
+            catch (e) {
+                console.log(e)
             }
         }
     },

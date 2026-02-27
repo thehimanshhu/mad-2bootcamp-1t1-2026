@@ -527,14 +527,6 @@ def task():
 
 from celery.result import AsyncResult
 
-@app.get("/result/<id>")
-def task_result(id) :
-    result = AsyncResult(id)
-    return {
-        "ready": result.ready(),
-        "successful": result.successful(),
-        "value": result.result if result.ready() else None,
-    }
 
 from .task import customer_csv
 @app.route("/exportcustomercsv"  )
@@ -542,9 +534,18 @@ from .task import customer_csv
 def exportcustomercsv():
     if current_user.roles[0].name =="customer":
         result  = customer_csv.delay(current_user.id)
-        return {"result_id" : result.id}
+        return {"task_id" : result.id}
     else:
         return "you are not authorised to execute the task"
     
 
 
+
+@app.get("/result")
+def download_csv() :
+    id = request.args.get("id")
+    result = AsyncResult(id)
+    if not result.ready() :
+        return {"message" : "CSV generation is in progress.."} , 202
+    return send_from_directory("static" , result.result) , 200
+    
