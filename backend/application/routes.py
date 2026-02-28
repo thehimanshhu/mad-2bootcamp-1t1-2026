@@ -548,4 +548,11 @@ def download_csv() :
     if not result.ready() :
         return {"message" : "CSV generation is in progress.."} , 202
     return send_from_directory("static" , result.result) , 200
+
+import random
+from .cache import cache
+@app.route("/checkcache")
+@cache.cached()
+def checkcache():
+    return {"random_number": int(random.randint(1,100))}
     

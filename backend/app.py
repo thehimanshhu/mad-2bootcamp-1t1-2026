@@ -4,12 +4,14 @@ from flask_security import Security  , SQLAlchemyUserDatastore
 from application.config import LocalConfig
 from flask_cors import CORS
 from application.celery_init import celery_init_app
+from application.cache import cache
 def create_app():
     app = Flask(__name__)
     app.config.from_object(LocalConfig)
     db.init_app(app)
     datastore = SQLAlchemyUserDatastore(db, User, Role)
     app.security = Security(app , datastore , register_blueprint=False)
+    cache.init_app(app)
     CORS(app)
     @app.security.unauthn_handler
     def unauthn_handler( mechanisms , headers  ):
